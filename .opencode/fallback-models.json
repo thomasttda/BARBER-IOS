@@ -1,0 +1,21 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "models": [
+    "9router/kr/claude-sonnet-4.5",
+    "9router/kr/claude-sonnet-4.5-thinking",
+    "9router/kr/claude-sonnet-4.5-agentic",
+    "9router/kr/claude-haiku-4.5",
+    "9router/kr/claude-haiku-4.5-thinking",
+    "9router/kr/claude-haiku-4.5-agentic",
+    "9router/kr/deepseek-3.2",
+    "9router/kr/glm-5",
+    "9router/kr/MiniMax-M2.5",
+    "9router/kr/qwen3-coder-next",
+    "9router/oc/deepseek-v4-flash-free",
+    "9router/oc/qwen3.6-plus-free",
+    "9router/oc/minimax-m2.5-free",
+    "9router/oc/nemotron-3-super-free",
+    "9router/oc/ring-2.6-1t-free",
+    "9router/oc/trinity-large-preview-free"
+  ]
+}
