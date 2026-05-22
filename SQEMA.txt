@@ -1,0 +1,126 @@
+// schema.prisma
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Enums para controle de status e roles
+enum Role {
+  ADMIN
+  BARBER
+  CLIENT
+}
+
+enum ShiftStatus {
+  AVAILABLE
+  UNAVAILABLE
+}
+
+enum ChairStatus {
+  FREE
+  OCCUPIED
+}
+
+enum ProductCategory {
+  BARBER_PRODUCT
+  CONSUMABLE
+}
+
+enum TransactionStatus {
+  IN_PROGRESS
+  COMPLETED
+}
+
+// 1. Users
+model User {
+  id            String   @id @default(uuid())
+  role          Role     @default(CLIENT)
+  name          String
+  email         String   @unique
+  password_hash String
+  created_at    DateTime @default(now())
+
+  // Relações
+  barberProfile BarberProfile?
+  clientProfile ClientProfile?
+  
+  // Cortes iniciados/finalizados por este barbeiro ou cliente
+  cutsAsBarber  CutTransaction[] @relation("BarberCuts")
+  cutsAsClient  CutTransaction[] @relation("ClientCuts")
+  
+  // Galeria do barbeiro
+  galleryImages Gallery[]
+}
+
+// 2. Barber Profile
+model BarberProfile {
+  id           String      @id @default(uuid())
+  user_id      String      @unique
+  user         User        @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  shift_status ShiftStatus @default(UNAVAILABLE)
+  chair_status ChairStatus @default(FREE)
+}
+
+// 3. Client Profile
+model ClientProfile {
+  id                 String @id @default(uuid())
+  user_id            String @unique
+  user               User   @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  loyalty_cuts_count Int    @default(0)
+}
+
+// 4. Services
+model Service {
+  id     String  @id @default(uuid())
+  name   String
+  price  Decimal @db.Decimal(10, 2)
+  active Boolean @default(true)
+}
+
+// 5. Products
+model Product {
+  id       String          @id @default(uuid())
+  name     String
+  price    Decimal         @db.Decimal(10, 2)
+  category ProductCategory
+  stock    Int             @default(0)
+}
+
+// 6. Cuts / Transactions
+model CutTransaction {
+  id             String            @id @default(uuid())
+  barber_id      String
+  client_id      String
+  start_time     DateTime          @default(now())
+  end_time       DateTime?
+  services_ids   String[]          // Array de IDs referenciando Services
+  products_ids   String[]          // Array de IDs referenciando Products
+  total_amount   Decimal?          @db.Decimal(10, 2)
+  status         TransactionStatus @default(IN_PROGRESS)
+
+  barber         User              @relation("BarberCuts", fields: [barber_id], references: [id])
+  client         User              @relation("ClientCuts", fields: [client_id], references: [id])
+}
+
+// 7. Gallery
+model Gallery {
+  id         String   @id @default(uuid())
+  barber_id  String
+  image_url  String
+  created_at DateTime @default(now())
+
+  barber     User     @relation(fields: [barber_id], references: [id], onDelete: Cascade)
+}
+
+// 8. Banners
+model Banner {
+  id            String  @id @default(uuid())
+  image_url     String
+  is_active     Boolean @default(true)
+  display_order Int     @default(0)
+}

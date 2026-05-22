@@ -1,0 +1,219 @@
+Aqui está o prompt otimizado, estruturado com engenharia de prompt avançada. Ele foi desenhado para ser processado por agentes autônomos de desenvolvimento (como Devin, Cursor, AutoGPT ou Claude Engineer), dividindo a aplicação em arquitetura, banco de dados, UI/UX e regras de negócio para garantir zero ambiguidade.
+
+Copie e cole o bloco abaixo para o seu agente:
+
+[INÍCIO DO PROMPT PARA O AGENTE]
+
+Role: Atue como um Desenvolvedor Full-Stack Senior e Arquiteto de Software. Seu objetivo é desenvolver, passo a passo, uma aplicação SaaS Web/Mobile completa para gestão de barbearias, utilizando as melhores práticas de Clean Code, componentização e gerenciamento de estado em tempo real.
+
+Objetivo da Aplicação: Criar um ecossistema digital composto por um aplicativo mobile-first (ou PWA) com navegação via Bottom Menu, e um painel Admin/SaaS. O sistema possui controle de permissões (RBAC) rigoroso: ADMIN, BARBER e CLIENT.
+
+1. MODELAGEM DE DADOS E RELACIONAMENTOS (Database Schema)
+Configure o banco de dados (recomenda-se PostgreSQL com Prisma ou Supabase/Firebase para suporte Real-Time) com as seguintes entidades:
+
+Users: id, role (ADMIN, BARBER, CLIENT), name, email, password_hash, created_at.
+
+BarberProfile: user_id, shift_status (AVAILABLE/UNAVAILABLE), chair_status (FREE/OCCUPIED).
+
+ClientProfile: user_id, loyalty_cuts_count (int, default 0).
+
+Services: id, name, price, active.
+
+Products: id, name, price, category (BARBER_PRODUCT, CONSUMABLE), stock.
+
+Cuts/Transactions: id, barber_id, client_id, start_time (timestamp), end_time (timestamp), services_ids[], products_ids[], total_amount, status (IN_PROGRESS, COMPLETED).
+
+Gallery: id, barber_id, image_url, created_at.
+
+Banners: id, image_url, is_active, display_order.
+
+2. ESTRUTURA DE NAVEGAÇÃO E UI (Mobile-First Bottom Menu)
+Implemente um Bottom Navigation Bar moderno com as 4 abas principais:
+
+Home:
+
+Topo: Logo da Barbearia.
+
+Abaixo: Carrossel de Banners rotativos (dados alimentados pela tabela Banners).
+
+Abaixo: Grid 3x1 de Produtos (Filtro: category == BARBER_PRODUCT).
+
+Abaixo: Lista de Barbeiros mostrando o status atual (shift_status e chair_status).
+
+Agendamento (Real-Time UI):
+
+Renderização visual de ícones de "Cadeiras".
+
+Lógica de Estado: Faça um bind em tempo real (WebSocket/Listener). Se chair_status == OCCUPIED, cadeira = VERMELHA. Se chair_status == FREE, cadeira = VERDE.
+
+Nota: A atualização de cor ocorre automaticamente no disparo das actions de Iniciar/Concluir corte.
+
+Loja:
+
+Listagem completa de produtos (pomadas, géis, refrigerantes, cervejas, etc.) disponíveis para compra ou consumo na espera.
+
+Perfil:
+
+Renderização condicional baseada na role do usuário (detalhado na seção de Regras de Negócio).
+
+3. REGRAS DE NEGÓCIO E PERMISSÕES (RBAC)
+Role: CLIENT
+
+Visualiza a Home, Agendamento e Loja.
+
+Em seu "Perfil", visualiza seus dados e o Cartão Fidelidade Digital: uma UI gráfica que preenche selos. Lógica: if (loyalty_cuts_count % 10 == 0) { show_free_cut_voucher = true }.
+
+Role: BARBER
+
+Acesso ao seu Perfil, onde gerencia sua galeria (upload de fotos de cortes que alimentam a galeria geral, marcadas com seu user_id).
+
+Botões de Ação no Perfil:
+
+ATIVAR/DESATIVAR TURNO: Muda shift_status. Reflete na Home para o público.
+
+INICIAR/CONCLUIR CORTE: Abre a "Floating Box de Checkout" (detalhada abaixo). Muda o chair_status em tempo real.
+
+Role: ADMIN (SaaS Dashboard)
+
+Acesso total. Pode visualizar e executar ações nos painéis de qualquer Barbeiro.
+
+Dashboard Financeiro: Gráficos de entrada/saída de caixa. Lista de ganho/comissão por barbeiro.
+
+Gestão de Equipe: Criar novos usuários, designar roles (BARBER ou ADMIN).
+
+Gestões CRUD: Adicionar/Editar/Remover Serviços e Preços; Adicionar/Editar/Remover Produtos; Adicionar/Editar/Remover Banners da Home.
+
+Relatórios de Tempo: Tabela logando start_time, end_time e tempo de duração total de cada corte finalizado.
+
+4. FLUXO CRÍTICO: INICIAR/CONCLUIR CORTE E CHECKOUT
+Quando um ADMIN ou BARBER clicar em "Iniciar Corte", registre o start_time e mude a cadeira para VERMELHO.
+Quando clicar em "Finalizar Corte", execute o seguinte workflow obrigatório:
+
+Floating Box de Checkout:
+
+Input 1: Select Box de Cliente (busque todos os usuários role == CLIENT).
+
+Input 2: Select Box Multi-choice de Serviços (busca da tabela Services).
+
+Input 3: List Selection de Produtos/Consumo (busca da tabela Products).
+
+Geração da Comanda (Receipt):
+
+Ao clicar no botão "Finalizar" dentro do form, renderize na tela uma "Comanda/Recibo" contendo: Nome da Barbearia (topo), Nome do Barbeiro, Nome do Cliente, Lista de Serviços/Produtos Consumidos, e Valor Total Calculado.
+
+Hooks Pós-Checkout (Background Lógica):
+
+Atualize o loyalty_cuts_count do Cliente (+1).
+
+Mude a cadeira para VERDE (chair_status = FREE).
+
+Grave o end_time da transação.
+
+Dispare os dados do Total para o Dashboard Financeiro do Admin (atualizando os gráficos e receita do barbeiro específico).
+
+5. INSTRUÇÕES DE EXECUÇÃO PARA O AGENTE
+Inicie inicializando o repositório e configurando a arquitetura básica e rotas.
+
+Crie e popule os esquemas de banco de dados com dados mock para testes.
+
+Implemente o sistema de autenticação e as rotas protegidas (RBAC).
+
+Construa as interfaces (UI/UX) focando primeiro nos componentes Mobile (Bottom Menu, Cards, Floating Box).
+
+Implemente a lógica de estado global e tempo real das "Cadeiras de Agendamento".
+
+Integre o Dashboard Financeiro com bibliotecas de gráficos (ex: Recharts ou Chart.js).
+
+Aguarde aprovação entre cada etapa antes de avançar para a próxima.
+
+[FIM DO PROMPT PARA O AGENTE]
+
+Por que esta estrutura funciona para IAs autônomas:
+Tipagem de Dados Implícita: Ao definir o Database Schema com exatidão (id, arrays, timestamps), o agente não perderá tempo adivinhando como estruturar o backend.
+
+Separação de Preocupações (Separation of Concerns): A divisão clara entre UI (Bottom Menu), Estado (Real-Time Cadeiras) e Fluxo (Checkout) impede que o agente gere código espaguete.
+
+Condicionais Booleanas e Lógicas: A regra do cartão fidelidade e do status das cadeiras estão explicadas com pseudo-lógica de programação (if chair_status == OCCUPIED...), que as IAs convertem instantaneamente para código real (React states, hooks, etc).
+
+Instrução de Execução: O passo a passo no final orienta o agente a construir de forma linear, evitando que ele tente codificar o banco de dados e o design do frontend na mesma iteração, o que causaria timeout ou falhas em agentes autônomos.
+
+Aqui está o prompt focado na camada de Front-end e UI/UX. Ele utiliza terminologia de Design System e propriedades CSS/Tailwind específicas para forçar a IA a gerar uma interface com aspecto de "aplicativo de luxo", alinhado aos mais altos padrões de agências digitais e branding profissional.
+
+Copie e cole o bloco abaixo para o seu agente:
+
+[INÍCIO DO PROMPT PARA O AGENTE FRONT-END]
+
+Role: Atue como um Engenheiro Front-end Especialista (React Native/Expo ou Next.js) e UI/UX Designer focado em interfaces Premium. Sua tarefa é construir a camada visual do aplicativo da barbearia, garantindo uma estética moderna, sofisticada e de alta conversão.
+
+1. DESIGN SYSTEM E ESTÉTICA PREMIUM (Diretrizes Globais)
+A interface deve transmitir um aspecto "Premium/Boutique". Implemente um Design System rigoroso com as seguintes especificações:
+
+Paleta de Cores (Tema Escuro Elegante - Recomendado):
+
+Background: Escuro profundo (ex: #121212 ou #0F172A).
+
+Surface/Cards: Cinza escuro ou chumbo com leve transparência (ex: #1E1E1E ou #1E293B).
+
+Primary Accent: Ouro, Cobre ou Âmbar (ex: #D4AF37 ou #F59E0B) para botões de ação principal e ícones ativos.
+
+Text: Branco puro (#FFFFFF) para títulos, cinza claro (#A1A1AA) para descrições.
+
+Status: Verde menta/esmeralda para "Livre" e Vermelho coral/ruby para "Ocupado".
+
+Tipografia: Utilize fontes geométricas modernas e limpas (ex: Inter, Poppins ou SF Pro Display). Pesos em negrito (600-800) para títulos e números, e regular (400) para leitura.
+
+Bordas (Border Radius): Levemente arredondadas para um visual amigável mas sofisticado. Use 12px ou 16px (rounded-xl ou rounded-2xl no Tailwind) para Cards, Modais e Banners. Botões podem ser totalmente arredondados (rounded-full).
+
+Sombras (Shadows/Elevation): Evite sombras duras. Use sombras difusas, grandes e de baixa opacidade para criar profundidade. Exemplo: box-shadow: 0 10px 40px -10px rgba(0,0,0,0.5). Em botões de destaque, adicione um leve glow da cor de destaque.
+
+Ícones: Utilize bibliotecas de ícones modernos, com traços finos e consistentes (ex: Lucide Icons, Phosphor Icons ou Heroicons).
+
+2. ESPECIFICAÇÕES DOS COMPONENTES DE UI
+A. Bottom Navigation Bar (Menu Inferior)
+
+Estilo: Efeito Glassmorphism (fundo semi-transparente com backdrop-blur).
+
+Layout: Flutuante (descolado das bordas laterais e inferior com margin: 16px e border-radius: 24px) ou fixo tradicional na base, mas sem bordas sólidas.
+
+Interação: Quando a aba estiver ativa, o ícone deve mudar para a cor Primary Accent, acompanhado de um leve indicativo visual (como um pequeno ponto ou barra sutil abaixo do ícone).
+
+B. Cards de Produtos e Barbeiros (Grid e Listas)
+
+Design: Fundo Surface, bordas de 12px. A imagem do produto/corte deve ocupar a parte superior com border-radius acompanhando o card, sem margens (overflow-hidden).
+
+Interação: Ao tocar (ou fazer hover), aplicar um leve efeito de escala (transform: scale(0.98)).
+
+C. Agendamento em Tempo Real (UI das Cadeiras)
+
+Visual: Não use apenas quadrados verdes ou vermelhos. Desenhe cards ou utilize ícones vetoriais de "Cadeiras de Barbeiro".
+
+Feedback Visual:
+
+Cadeira Livre: Ícone com contorno sutil em verde esmeralda e um texto pequeno "Disponível".
+
+Cadeira Ocupada: Ícone preenchido ou com borda vermelho coral, emitindo uma leve animação de pulso (pulse animation no CSS) para indicar atividade contínua.
+
+D. Floating Box de Checkout e Modais
+
+Abertura: Deve deslizar da parte inferior da tela (Slide Up) ou surgir com um fade-in scale.
+
+Fundo: A tela de fundo deve receber um overlay escuro com blur (backdrop-blur-sm).
+
+Layout Interno: Inputs com fundo levemente mais claro que o modal, sem bordas pesadas, apenas um leve contorno inferior ou ring em foco.
+
+Comanda Final: O recibo gerado deve ter o design semelhante a um ticket de papel moderno (com bordas serrilhadas via CSS ou uma estrutura de card minimalista) destacando o "Valor Total" em fonte grande e cor de destaque.
+
+E. Cartão Fidelidade (Perfil do Cliente)
+
+Visual: Um card horizontal ou grid exibindo 10 "selos" ou espaços.
+
+Preenchimento: Espaços vazios devem ser círculos vazados com borda sutil. Cortes realizados devem ser círculos preenchidos com o logo da barbearia ou um ícone de tesoura dourada, incluindo uma pequena animação de "carimbo" quando um novo corte é adicionado.
+
+3. DIRETRIZES DE EXECUÇÃO PARA O AGENTE
+Estrutura CSS/Estilização: Utilize Tailwind CSS (se aplicável à stack) para garantir consistência e rapidez. Defina as cores da marca no arquivo de configuração antes de iniciar o layout.
+
+Componentização: Isole o BottomMenu, ChairStatusCard, ProductCard e FloatingCheckout em componentes reutilizáveis.
+
+Animações (Micro-interações): Utilize bibliotecas como Framer Motion (React) ou Reanimated (React Native). Adicione transições suaves (duration: 200ms, ease-in-out) em mudanças de estado (ex: botão de iniciar corte mudando de cor).
+
+Responsividade: Garanta que o grid de produtos (3x1) e o painel de banners se adaptem perfeitamente a telas de smartphones (iPhone SE a Pro Max) sem quebrar o layout.
